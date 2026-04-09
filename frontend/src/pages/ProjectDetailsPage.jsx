@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, ClipboardList, MessageSquare, Activity } from "lucide-react";
+import { ArrowLeft, ClipboardList, MessageSquare, Activity, Sparkles } from "lucide-react";
 import api from "../api/axios.js";
 import { logout } from "../api/auth.js";
 import Card from "../components/Card.jsx";
@@ -21,6 +21,7 @@ const TABS = [
   { id: "tasks", label: "Tâches", icon: ClipboardList },
   { id: "comments", label: "Commentaires", icon: MessageSquare },
   { id: "activity", label: "Activité", icon: Activity },
+  { id: "ai", label: "Assistance IA", icon: Sparkles },
 ];
 
 const PROJECT_STATUS_LABELS = {
@@ -308,7 +309,7 @@ export default function ProjectDetailsPage() {
       <main className="max-w-5xl mx-auto px-6 py-8">
         {/* Onglets stylisés */}
         <div className="flex gap-1 p-1 rounded-xl bg-zinc-100/80 ring-1 ring-zinc-200/80 w-fit mb-8">
-          {TABS.map((tab) => (
+          {TABS.filter((tab) => tab.id !== "ai" || isOwner).map((tab) => (
             <button
               key={tab.id}
               type="button"
@@ -436,6 +437,9 @@ export default function ProjectDetailsPage() {
           />
         )}
 
+        {activeTab === "ai" && isOwner && (
+          <AIAssistantPanel projectId={id} />
+        )}
       </main>
     </div>
   );
@@ -684,6 +688,96 @@ function EditProjectForm({ project, onSave, onCancel }) {
   );
 }
 
+function AIAssistantPanel({ projectId }) {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
+
+  async function handleGenerate() {
+    setLoading(true);
+    setError("");
+    setResult(null);
+    try {
+      const { data } = await api.post(`/api/projects/${projectId}/ai-summary/`);
+      setResult(data);
+    } catch (err) {
+      const msg =
+        err.response?.data?.detail ||
+        (typeof err.response?.data === "object"
+          ? Object.values(err.response?.data || {}).flat().join(" ")
+          : err.response?.data) ||
+        "Erreur lors de la génération. Réessayez.";
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card className="p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <SectionTitle>Assistance IA</SectionTitle>
+            <p className="mt-1 text-sm text-zinc-500">
+              Génère un résumé de l&apos;état d&apos;avancement et des suggestions d&apos;actions prioritaires basées sur tes tâches et ton activité.
+            </p>
+          </div>
+          <Sparkles className="w-6 h-6 text-brand-500 shrink-0 mt-1" />
+        </div>
+        <button
+          type="button"
+          onClick={handleGenerate}
+          disabled={loading}
+          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60 transition-colors"
+        >
+          {loading ? (
+            <>
+              <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              Génération en cours…
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4" />
+              Générer un résumé IA
+            </>
+          )}
+        </button>
+      </Card>
+
+      {error && (
+        <div className="rounded-xl bg-rose-50/80 px-4 py-3 text-sm text-rose-800 ring-1 ring-rose-200">
+          {error}
+        </div>
+      )}
+
+      {result && (
+        <>
+          <Card className="p-6">
+            <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">Résumé</p>
+            <p className="text-sm text-zinc-700 leading-relaxed">{result.summary}</p>
+          </Card>
+
+          {result.suggestions && result.suggestions.length > 0 && (
+            <Card className="p-6">
+              <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">Actions prioritaires</p>
+              <ul className="space-y-2">
+                {result.suggestions.map((s, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-zinc-700">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700">
+                      {i + 1}
+                    </span>
+                    {s}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
 
 function taskApiErrorMessage(err) {
   const data = err.response?.data;
