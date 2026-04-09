@@ -13,18 +13,12 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-try:
-    from dotenv import load_dotenv
-
-    load_dotenv(BASE_DIR / ".env")
-except ImportError:
-    pass
-
-# Clé API OpenAI (module Assistance IA) — voir backend/.env.example
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()
 
 
 # Quick-start development settings - unsuitable for production
@@ -155,6 +149,8 @@ REST_FRAMEWORK = {
 
 # SimpleJWT : durée de vie des tokens (évite "Given token not valid for any token type")
 from datetime import timedelta
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),  # 1 h (défaut SimpleJWT = 5 min)
