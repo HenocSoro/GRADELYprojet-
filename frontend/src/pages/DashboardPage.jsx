@@ -43,9 +43,11 @@ export default function DashboardPage() {
   async function fetchCurrentUser() {
     try {
       const { data } = await api.get("/api/me/");
+      console.log("[Gradely] 👤 Utilisateur connecté:", data);
       setCurrentUser(data);
       return data;
-    } catch {
+    } catch (err) {
+      console.error("[Gradely] ❌ fetchCurrentUser échoué:", err.response?.status, err.message);
       return null;
     }
   }
@@ -53,9 +55,13 @@ export default function DashboardPage() {
   async function fetchProjects() {
     try {
       const { data } = await api.get("/api/projects/");
+      console.log("[Gradely] 📂 Projets reçus:", data);
       // Defensive: toujours un tableau (l'API peut retourner {results:[]} si pagination activée)
-      setProjects(Array.isArray(data) ? data : (data?.results ?? []));
+      const list = Array.isArray(data) ? data : (data?.results ?? []);
+      console.log("[Gradely] 📂 Projets après normalisation:", list.length, "projet(s)");
+      setProjects(list);
     } catch (err) {
+      console.error("[Gradely] ❌ fetchProjects échoué:", err.response?.status, err.response?.data, err.message);
       if (err.response?.status === 401) {
         logout();
         navigate("/login", { replace: true });

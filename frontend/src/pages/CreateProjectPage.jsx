@@ -19,17 +19,31 @@ export default function CreateProjectPage() {
     setError("");
     setLoading(true);
     try {
-      await api.post("/api/projects/", { title, description });
+      const res = await api.post("/api/projects/", { title, description });
+      console.log("[Gradely] ✅ Projet créé avec succès:", res.status, res.data);
       navigate("/dashboard", { replace: true });
     } catch (err) {
+      console.error(
+        "[Gradely] ❌ Erreur création projet:",
+        err.response?.status,
+        err.response?.data,
+        err.message
+      );
       if (err.response?.status === 401) {
         logout();
         navigate("/login", { replace: true });
       } else {
-        setError(
-          err.response?.data?.detail ||
-            "Impossible de créer le projet. Vérifiez les données."
-        );
+        // Affiche tous les détails d'erreur (validation, serveur, réseau)
+        const data = err.response?.data;
+        let msg = "Impossible de créer le projet.";
+        if (data) {
+          if (typeof data === "string") msg = data;
+          else if (data.detail) msg = data.detail;
+          else msg = JSON.stringify(data);
+        } else if (err.message) {
+          msg = err.message;
+        }
+        setError(msg);
       }
     } finally {
       setLoading(false);
