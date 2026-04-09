@@ -352,6 +352,97 @@ class ProjectSupervisionRequestViewSet(viewsets.GenericViewSet):
         return Response(serializer.data, status=201)
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def project_ai_summary(request, project_pk):
+    """
+    Génère un résumé IA et des suggestions de priorités pour un projet.
+    POST /api/projects/<project_pk>/ai-summary/
+
+    Collecte les données du projet (tâches, activité récente) et les envoie
+    à l'API OpenAI pour produire un résumé et des suggestions d'actions.
+    """
+    import json
+    import openai
+    from django.conf import settings
+    from rest_framework.exceptions import NotFound, PermissionDenied
+
+    project = Project.objects.filter(pk=project_pk).select_related("owner", "supervisor").first()
+    if not project:
+        raise NotFound("Projet introuvable.")
+
+    user = request.user
+    if project.owner_id != user.id and project.supervisor_id != user.id:
+        raise PermissionDenied("Accès refusé à ce projet.")
+
+    if not settings.OPENAI_API_KEY:
+        return Response(
+            {"detail": "Clé OpenAI non configurée. Ajoutez OPENAI_API_KEY dans le fichier .env du backend."},
+            status=503,
+        )
+
+    # Collecte des données du projet
+    tasks = list(
+        project.tasks.values("title", "status", "priority", "due_date").order_by("priority", "status")
+    )
+    activity = list(
+        project.activity_logs.values("action_type", "description", "created_at").order_by("-created_at")[:5]
+    )
+
+    priority_labels = {1: "haute", 2: "moyenne", 3: "basse"}
+    tasks_text = "\n".join(
+        f"- [{t['status']}] {t['title']} (priorité {priority_labels.get(t['priority'], t['priority'])}"
+        + (f", échéance {t['due_date']}" if t["due_date"] else "")
+        + ")"
+        for t in tasks
+    ) or "Aucune tâche."
+
+    activity_text = "\n".join(f"- {a['description']}" for a in activity) or "Aucune activité récente."
+
+    prompt = f"""Tu es un assistant académique qui aide des étudiants à suivre leurs projets universitaires.
+
+Voici l'état actuel du projet "{project.title}" :
+- Description : {project.description or "Non renseignée"}
+- Statut : {project.status}
+- Progression : {project.progress_percent}%
+
+Tâches :
+{tasks_text}
+
+Activité récente :
+{activity_text}
+
+Réponds UNIQUEMENT en JSON valide avec exactement ces deux clés :
+{{
+  "summary": "Un paragraphe de 3 à 4 phrases décrivant l'état d'avancement du projet de façon synthétique.",
+  "suggestions": ["Action concrète 1", "Action concrète 2", "Action concrète 3"]
+}}
+
+Les suggestions doivent être des actions prioritaires et concrètes que l'étudiant devrait faire maintenant. Entre 3 et 5 suggestions."""
+
+    try:
+        client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"},
+            temperature=0.4,
+            max_tokens=800,
+        )
+        result = json.loads(response.choices[0].message.content)
+        summary = result.get("summary", "")
+        suggestions = result.get("suggestions", [])
+        if not isinstance(suggestions, list):
+            suggestions = []
+        return Response({"summary": summary, "suggestions": suggestions})
+    except openai.AuthenticationError:
+        return Response({"detail": "Clé OpenAI invalide. Vérifiez OPENAI_API_KEY dans le fichier .env."}, status=503)
+    except openai.RateLimitError:
+        return Response({"detail": "Limite de requêtes OpenAI atteinte. Réessayez dans quelques instants."}, status=429)
+    except Exception:
+        return Response({"detail": "Erreur lors de la génération IA. Réessayez plus tard."}, status=502)
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def current_user(request):

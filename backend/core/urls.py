@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     current_user,
     staff_users,
+    project_ai_summary,
     ProjectActivityViewSet,
     ProjectCommentViewSet,
     ProjectViewSet,
@@ -53,6 +54,11 @@ urlpatterns = [
         "supervision-requests/pending-count/",
         SupervisionRequestViewSet.as_view({"get": "pending_count"}),
         name="supervision-request-pending-count",
+    ),
+    path(
+        "projects/<int:project_pk>/ai-summary/",
+        project_ai_summary,
+        name="project-ai-summary",
     ),
     path("", include(router.urls)),
     path("dashboard/student", student_dashboard),
