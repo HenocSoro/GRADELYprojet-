@@ -17,9 +17,11 @@ export default function DashboardPage() {
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [debugInfo, setDebugInfo] = useState({ steps: [] });
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const debugMode = searchParams.get("debug") === "1";
   const searchQuery = (searchParams.get("q") ?? "").trim().toLowerCase();
   const normalized = (s) =>
     (s ?? "")
@@ -45,9 +47,11 @@ export default function DashboardPage() {
       const { data } = await api.get("/api/me/");
       console.log("[Gradely] 👤 Utilisateur connecté:", data);
       setCurrentUser(data);
+      setDebugInfo(d => ({ ...d, user: data, userError: null }));
       return data;
     } catch (err) {
       console.error("[Gradely] ❌ fetchCurrentUser échoué:", err.response?.status, err.message);
+      setDebugInfo(d => ({ ...d, userError: `${err.response?.status ?? "réseau"} — ${err.message}` }));
       return null;
     }
   }
@@ -60,8 +64,10 @@ export default function DashboardPage() {
       const list = Array.isArray(data) ? data : (data?.results ?? []);
       console.log("[Gradely] 📂 Projets après normalisation:", list.length, "projet(s)");
       setProjects(list);
+      setDebugInfo(d => ({ ...d, projectCount: list.length, projectRaw: JSON.stringify(data).slice(0, 300), projectError: null }));
     } catch (err) {
       console.error("[Gradely] ❌ fetchProjects échoué:", err.response?.status, err.response?.data, err.message);
+      setDebugInfo(d => ({ ...d, projectError: `${err.response?.status ?? "réseau"} — ${err.message}` }));
       if (err.response?.status === 401) {
         logout();
         navigate("/login", { replace: true });
@@ -86,6 +92,7 @@ export default function DashboardPage() {
     setError("");
     const user = await fetchCurrentUser();
     if (!user) {
+      setError("Impossible de récupérer votre profil. Vérifiez votre connexion ou reconnectez-vous.");
       setLoading(false);
       return;
     }
@@ -109,6 +116,16 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
+      {/* ── PANNEAU DEBUG (visible uniquement avec ?debug=1 dans l'URL) ── */}
+      {debugMode && (
+        <div className="mb-6 rounded-xl border-2 border-yellow-400 bg-yellow-50 p-4 text-xs font-mono space-y-1">
+          <p className="font-bold text-yellow-800 text-sm">🛠 MODE DEBUG</p>
+          <p>👤 Utilisateur : {debugInfo.user ? `${debugInfo.user.email} (id=${debugInfo.user.id}, staff=${debugInfo.user.is_staff})` : debugInfo.userError ? `❌ ERREUR: ${debugInfo.userError}` : "chargement..."}</p>
+          <p>📂 Projets : {debugInfo.projectError ? `❌ ERREUR: ${debugInfo.projectError}` : debugInfo.projectCount !== undefined ? `${debugInfo.projectCount} projet(s) trouvé(s)` : "chargement..."}</p>
+          {debugInfo.projectRaw && <p className="text-gray-600 break-all">Données: {debugInfo.projectRaw}</p>}
+          <p>🔑 Token: {getAccessToken() ? `Présent (${getAccessToken().slice(0,20)}...)` : "❌ Absent"}</p>
+        </div>
+      )}
       <SectionTitle>
         {currentUser?.is_staff && projects.length > 0 && !isSupervisorOnly
           ? "Mes projets"
