@@ -53,7 +53,8 @@ export default function DashboardPage() {
   async function fetchProjects() {
     try {
       const { data } = await api.get("/api/projects/");
-      setProjects(data);
+      // Defensive: toujours un tableau (l'API peut retourner {results:[]} si pagination activée)
+      setProjects(Array.isArray(data) ? data : (data?.results ?? []));
     } catch (err) {
       if (err.response?.status === 401) {
         logout();
