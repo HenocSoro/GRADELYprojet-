@@ -425,7 +425,7 @@ Les suggestions doivent être des actions prioritaires et concrètes que l'étud
         resp = http_requests.post(
             "https://api.openai.com/v1/chat/completions",
             headers={
-                "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
+                "Authorization": f"Bearer {settings.OPENAI_API_KEY.strip()}",
                 "Content-Type": "application/json",
             },
             json={
