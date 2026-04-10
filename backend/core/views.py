@@ -439,8 +439,8 @@ Les suggestions doivent être des actions prioritaires et concrètes que l'étud
         return Response({"detail": "Clé OpenAI invalide. Vérifiez OPENAI_API_KEY dans le fichier .env."}, status=503)
     except openai.RateLimitError:
         return Response({"detail": "Limite de requêtes OpenAI atteinte. Réessayez dans quelques instants."}, status=429)
-    except Exception:
-        return Response({"detail": "Erreur lors de la génération IA. Réessayez plus tard."}, status=502)
+    except Exception as e:
+        return Response({"detail": f"Erreur IA ({type(e).__name__}) : {str(e)[:200]}"}, status=502)
 
 
 @api_view(["GET"])
