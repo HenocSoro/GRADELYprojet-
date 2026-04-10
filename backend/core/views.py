@@ -375,13 +375,9 @@ def project_ai_summary(request, project_pk):
     if project.owner_id != user.id and project.supervisor_id != user.id:
         raise PermissionDenied("Accès refusé à ce projet.")
 
-    # Choisir le provider IA : Groq (gratuit) en priorité, sinon OpenAI
-    use_groq = bool(settings.GROQ_API_KEY)
-    use_openai = bool(settings.OPENAI_API_KEY)
-
-    if not use_groq and not use_openai:
+    if not settings.OPENAI_API_KEY:
         return Response(
-            {"detail": "Aucune clé IA configurée. Ajoutez GROQ_API_KEY (gratuit) ou OPENAI_API_KEY dans Railway."},
+            {"detail": "Clé OpenAI non configurée. Ajoutez OPENAI_API_KEY dans le fichier .env du backend."},
             status=503,
         )
 
@@ -424,29 +420,15 @@ Réponds UNIQUEMENT en JSON valide avec exactement ces deux clés :
 
 Les suggestions doivent être des actions prioritaires et concrètes que l'étudiant devrait faire maintenant. Entre 3 et 5 suggestions."""
 
-    messages = [{"role": "user", "content": prompt}]
-
     try:
-        if use_groq:
-            from groq import Groq
-            client = Groq(api_key=settings.GROQ_API_KEY)
-            response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=messages,
-                response_format={"type": "json_object"},
-                temperature=0.4,
-                max_tokens=800,
-            )
-        else:
-            client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=messages,
-                response_format={"type": "json_object"},
-                temperature=0.4,
-                max_tokens=800,
-            )
-
+        client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"},
+            temperature=0.4,
+            max_tokens=800,
+        )
         result = json.loads(response.choices[0].message.content)
         summary = result.get("summary", "")
         suggestions = result.get("suggestions", [])
@@ -454,11 +436,11 @@ Les suggestions doivent être des actions prioritaires et concrètes que l'étud
             suggestions = []
         return Response({"summary": summary, "suggestions": suggestions})
     except openai.AuthenticationError:
-        return Response({"detail": "Clé OpenAI invalide. Vérifiez OPENAI_API_KEY dans Railway."}, status=503)
+        return Response({"detail": "Clé OpenAI invalide. Vérifiez OPENAI_API_KEY dans le fichier .env."}, status=503)
     except openai.RateLimitError:
-        return Response({"detail": "Quota OpenAI dépassé. Utilisez GROQ_API_KEY (gratuit) à la place."}, status=429)
-    except Exception as e:
-        return Response({"detail": f"Erreur IA : {type(e).__name__}. Vérifiez votre clé API dans Railway."}, status=502)
+        return Response({"detail": "Limite de requêtes OpenAI atteinte. Réessayez dans quelques instants."}, status=429)
+    except Exception:
+        return Response({"detail": "Erreur lors de la génération IA. Réessayez plus tard."}, status=502)
 
 
 @api_view(["GET"])
