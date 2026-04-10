@@ -421,26 +421,36 @@ Réponds UNIQUEMENT en JSON valide avec exactement ces deux clés :
 Les suggestions doivent être des actions prioritaires et concrètes que l'étudiant devrait faire maintenant. Entre 3 et 5 suggestions."""
 
     try:
-        client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            response_format={"type": "json_object"},
-            temperature=0.4,
-            max_tokens=800,
+        import requests as http_requests
+        resp = http_requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "gpt-4o-mini",
+                "messages": [{"role": "user", "content": prompt}],
+                "response_format": {"type": "json_object"},
+                "temperature": 0.4,
+                "max_tokens": 800,
+            },
+            timeout=30,
         )
-        result = json.loads(response.choices[0].message.content)
-        summary = result.get("summary", "")
-        suggestions = result.get("suggestions", [])
+        if resp.status_code == 401:
+            return Response({"detail": "Clé OpenAI invalide. Vérifiez OPENAI_API_KEY dans Railway."}, status=503)
+        if resp.status_code == 429:
+            return Response({"detail": "Limite de requêtes OpenAI atteinte. Réessayez dans quelques instants."}, status=429)
+        if not resp.ok:
+            return Response({"detail": f"Erreur OpenAI {resp.status_code} : {resp.text[:200]}"}, status=502)
+        data = json.loads(resp.json()["choices"][0]["message"]["content"])
+        summary = data.get("summary", "")
+        suggestions = data.get("suggestions", [])
         if not isinstance(suggestions, list):
             suggestions = []
         return Response({"summary": summary, "suggestions": suggestions})
-    except openai.AuthenticationError:
-        return Response({"detail": "Clé OpenAI invalide. Vérifiez OPENAI_API_KEY dans le fichier .env."}, status=503)
-    except openai.RateLimitError:
-        return Response({"detail": "Limite de requêtes OpenAI atteinte. Réessayez dans quelques instants."}, status=429)
     except Exception as e:
-        return Response({"detail": f"Erreur IA ({type(e).__name__}) : {str(e)[:200]}"}, status=502)
+        return Response({"detail": f"Erreur réseau ({type(e).__name__}) : {str(e)[:200]}"}, status=502)
 
 
 @api_view(["GET"])
