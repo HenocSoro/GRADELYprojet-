@@ -19,16 +19,9 @@ export default function CreateProjectPage() {
     setError("");
     setLoading(true);
     try {
-      const res = await api.post("/api/projects/", { title, description });
-      console.log("[Gradely] ✅ Projet créé avec succès:", res.status, res.data);
+      await api.post("/api/projects/", { title, description });
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      console.error(
-        "[Gradely] ❌ Erreur création projet:",
-        err.response?.status,
-        err.response?.data,
-        err.message
-      );
       if (err.response?.status === 401) {
         logout();
         navigate("/login", { replace: true });
