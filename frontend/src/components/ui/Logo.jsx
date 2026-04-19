@@ -1,26 +1,26 @@
 /**
  * Logo Gradely — identité visuelle.
- * Import unique, pas de blur/opacité/filtre, ratio préservé (width: auto).
- * Variants : navbar (48px), auth (96px).
+ * Filtre CSS hue-rotate pour convertir le teal d'origine en bleu cohérent avec le thème.
  */
 
 import gradelyLogo from "@/assets/logo/gradely-logo.png";
 
-const HEIGHTS = {
-  navbar: "h-40",  // 160px — bien lisible
-  auth: "h-32",   // 128px
+const BLUE_FILTER = "hue-rotate(47deg) saturate(1.2) brightness(1.1)";
+
+// On fixe la LARGEUR (pas la hauteur) pour que le logo remplisse l'espace correctement
+const INLINE_SIZES = {
+  sidebar: { width: "160px", height: "auto" },
+  auth:    { width: "220px", height: "auto" },
+  navbar:  { width: "140px", height: "auto" },
 };
 
 export default function Logo({ variant = "navbar", className = "" }) {
-  const heightClass = HEIGHTS[variant] ?? HEIGHTS.navbar;
-
   return (
     <img
       src={gradelyLogo}
       alt="Gradely"
-      className={`${heightClass} w-auto object-contain object-center ${className}`}
-      width="auto"
-      height={variant === "navbar" ? 160 : 128}
+      className={className}
+      style={{ ...(INLINE_SIZES[variant] ?? INLINE_SIZES.navbar), filter: BLUE_FILTER }}
       draggable={false}
     />
   );

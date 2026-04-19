@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, ClipboardList, MessageSquare, Activity, Sparkles } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, CheckSquare, MessageSquare, Activity, Sparkles } from "lucide-react";
 import api from "../api/axios.js";
 import { logout } from "../api/auth.js";
 import Card from "../components/Card.jsx";
@@ -14,11 +14,10 @@ import Badge from "../components/ui/Badge.jsx";
 import SectionTitle from "../components/ui/SectionTitle.jsx";
 import ActivityFeed from "../components/ActivityFeed.jsx";
 import CommentList from "../components/CommentList.jsx";
-import { lucaBravo } from "../assets/images/index.js";
 
 const TABS = [
-  { id: "overview", label: "Vue d'ensemble", icon: ClipboardList },
-  { id: "tasks", label: "Tâches", icon: ClipboardList },
+  { id: "overview", label: "Vue d'ensemble", icon: LayoutDashboard },
+  { id: "tasks", label: "Tâches", icon: CheckSquare },
   { id: "comments", label: "Commentaires", icon: MessageSquare },
   { id: "activity", label: "Activité", icon: Activity },
   { id: "ai", label: "Assistance IA", icon: Sparkles },
@@ -245,58 +244,50 @@ export default function ProjectDetailsPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="relative border-b border-zinc-200/80 overflow-hidden min-h-[120px]">
-        <div
-          className="absolute inset-0 z-0"
-          style={{
-            backgroundImage: lucaBravo ? `url(${lucaBravo})` : "none",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            opacity: 0.35,
-            filter: "grayscale(100%) blur(4px)",
-          }}
-          aria-hidden
-        />
-        <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur" aria-hidden />
-        <div className="relative z-20 max-w-5xl mx-auto px-6 py-6">
+      {/* En-tête projet — propre, sans image floue */}
+      <div className="bg-white border-b border-gray-100 px-6 py-5">
+        <div className="max-w-5xl mx-auto">
           <Link
             to="/dashboard"
-            className="inline-flex items-center gap-2 text-sm text-zinc-600 hover:text-zinc-900 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-zinc-700 transition-colors mb-4"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Retour au dashboard
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Retour
           </Link>
-          <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">
-                {project.title}
-              </h1>
+              <h1 className="text-2xl font-bold text-zinc-900">{project.title}</h1>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <Badge variant={project.status === "active" ? "submitted" : project.status === "completed" ? "approved" : "default"}>
                   {PROJECT_STATUS_LABELS[project.status] ?? project.status}
                 </Badge>
-                {isSupervisor && (
-                  <Badge variant="approved">Vous supervisez</Badge>
-                )}
+                {isSupervisor && <Badge variant="approved">Vous supervisez</Badge>}
                 {project.supervisor && !isSupervisor && (
-                  <span className="text-sm text-zinc-500">Superviseur assigné</span>
+                  <span className="text-sm text-zinc-400">Superviseur assigné</span>
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-6">
               <div className="text-right">
-                <p className="text-xs font-medium text-zinc-500">Progression</p>
-                <p className="text-xl font-bold text-brand-600">{project.progress_percent ?? 0}%</p>
+                <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Progression</p>
+                <p className="text-3xl font-bold text-blue-600">{project.progress_percent ?? 0}%</p>
               </div>
               {(project.start_date || project.end_date) && (
-                <div className="text-right text-sm text-zinc-500">
+                <div className="text-sm text-zinc-400">
                   {project.start_date || "—"} → {project.end_date || "—"}
                 </div>
               )}
             </div>
           </div>
+          {/* Barre de progression */}
+          <div className="mt-4 h-1.5 w-full rounded-full bg-gray-100">
+            <div
+              className="h-1.5 rounded-full bg-blue-500 transition-all duration-500"
+              style={{ width: `${Math.min(project.progress_percent ?? 0, 100)}%` }}
+            />
+          </div>
         </div>
-      </header>
+      </div>
 
       {successMessage && (
         <div className="max-w-5xl mx-auto px-6 pt-4">
@@ -308,7 +299,7 @@ export default function ProjectDetailsPage() {
 
       <main className="max-w-5xl mx-auto px-6 py-8">
         {/* Onglets stylisés */}
-        <div className="flex gap-1 p-1 rounded-xl bg-zinc-100/80 ring-1 ring-zinc-200/80 w-fit mb-8">
+        <div className="flex gap-1 p-1 rounded-xl bg-gray-100 w-fit mb-8">
           {TABS.filter((tab) => tab.id !== "ai" || isOwner).map((tab) => (
             <button
               key={tab.id}
@@ -316,8 +307,8 @@ export default function ProjectDetailsPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                 activeTab === tab.id
-                  ? "bg-white text-brand-600 shadow-sm ring-1 ring-zinc-200/80"
-                  : "text-zinc-600 hover:text-zinc-900 hover:bg-white/50"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-zinc-500 hover:text-zinc-800 hover:bg-white/60"
               }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -613,33 +604,33 @@ function EditProjectForm({ project, onSave, onCancel }) {
 
   return (
     <Card className="p-5">
-      <h3 className="font-medium text-graphite-800 mb-4">Modifier le projet</h3>
+      <h3 className="font-medium text-zinc-800 mb-4">Modifier le projet</h3>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-graphite-700 mb-1">Titre</label>
+          <label className="block text-sm font-medium text-zinc-700 mb-1">Titre</label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full rounded-lg border border-sand-300 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
             required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-graphite-700 mb-1">Description</label>
+          <label className="block text-sm font-medium text-zinc-700 mb-1">Description</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
-            className="w-full rounded-lg border border-sand-300 px-3 py-2 text-sm resize-none"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm resize-none"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-graphite-700 mb-1">Statut</label>
+          <label className="block text-sm font-medium text-zinc-700 mb-1">Statut</label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="w-full rounded-lg border border-sand-300 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
           >
             <option value="active">Actif</option>
             <option value="completed">Terminé</option>
@@ -648,21 +639,21 @@ function EditProjectForm({ project, onSave, onCancel }) {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-graphite-700 mb-1">Date début</label>
+            <label className="block text-sm font-medium text-zinc-700 mb-1">Date début</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full rounded-lg border border-sand-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-graphite-700 mb-1">Date fin</label>
+            <label className="block text-sm font-medium text-zinc-700 mb-1">Date fin</label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full rounded-lg border border-sand-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
             />
           </div>
         </div>
@@ -671,14 +662,14 @@ function EditProjectForm({ project, onSave, onCancel }) {
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-sage-500 px-4 py-2 text-sm text-white hover:bg-sage-600 disabled:opacity-60"
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-60"
           >
             {submitting ? "Enregistrement..." : "Enregistrer"}
           </button>
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg border border-sand-300 px-4 py-2 text-sm text-graphite-600 hover:bg-sand-100"
+            className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-zinc-600 hover:bg-gray-50"
           >
             Annuler
           </button>
@@ -880,26 +871,26 @@ function TaskListSection({
   return (
     <div className="space-y-6">
       <form onSubmit={handleAdd} className="space-y-3">
-        <h4 className="font-medium text-graphite-800 text-sm">Nouvelle tâche</h4>
+        <h4 className="font-medium text-zinc-800 text-sm">Nouvelle tâche</h4>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Titre de la tâche"
-          className="w-full rounded-lg border border-sand-300 px-4 py-2 text-sm"
+          className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:bg-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition"
         />
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Description (optionnel)"
           rows={2}
-          className="w-full rounded-lg border border-sand-300 px-4 py-2 text-sm resize-none"
+          className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:bg-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition resize-none"
         />
         <div className="flex gap-3 items-center flex-wrap">
           <select
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className="rounded-lg border border-sand-300 px-4 py-2 text-sm text-graphite-800"
+            className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-zinc-800"
           >
             <option value="1">Priorité haute</option>
             <option value="2">Priorité moyenne</option>
@@ -909,12 +900,12 @@ function TaskListSection({
             type="date"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="rounded-lg border border-sand-300 px-4 py-2 text-sm"
+            className="rounded-lg border border-gray-200 px-4 py-2 text-sm"
           />
           <button
             type="submit"
             disabled={submitting || !title.trim()}
-            className="rounded-lg bg-sage-500 px-4 py-2 text-sm text-white hover:bg-sage-600 disabled:opacity-60"
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-60"
           >
             {submitting ? "Ajout..." : "Ajouter"}
           </button>
@@ -927,11 +918,11 @@ function TaskListSection({
       </form>
 
       <div className="space-y-3">
-        <h4 className="font-medium text-graphite-800 text-sm">Tâches</h4>
+        <h4 className="font-medium text-zinc-800 text-sm">Tâches</h4>
         {tasks.length === 0 ? (
           <Card className="p-6 text-center">
-            <p className="text-graphite-600 text-sm">Aucune tâche</p>
-            <p className="text-graphite-500 text-xs mt-1">Ajoutez une tâche ci-dessus</p>
+            <p className="text-zinc-600 text-sm">Aucune tâche</p>
+            <p className="text-zinc-500 text-xs mt-1">Ajoutez une tâche ci-dessus</p>
           </Card>
         ) : (
           tasks.map((t) => (
@@ -943,34 +934,34 @@ function TaskListSection({
                     value={editTitle}
                     onChange={(e) => setEditTitle(e.target.value)}
                     placeholder="Titre"
-                    className="w-full rounded-lg border border-sand-300 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
                   />
                   <textarea
                     value={editDescription}
                     onChange={(e) => setEditDescription(e.target.value)}
                     placeholder="Description (optionnel)"
                     rows={2}
-                    className="w-full rounded-lg border border-sand-300 px-3 py-2 text-sm resize-none"
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm resize-none"
                   />
                   <div className="flex flex-wrap gap-2 items-center">
                     <input
                       type="date"
                       value={editDueDate}
                       onChange={(e) => setEditDueDate(e.target.value)}
-                      className="rounded-lg border border-sand-300 px-3 py-2 text-sm"
+                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm"
                     />
                     <button
                       type="button"
                       onClick={saveEditTask}
                       disabled={savingEdit || !editTitle.trim()}
-                      className="rounded-lg bg-sage-500 px-3 py-1.5 text-sm text-white hover:bg-sage-600 disabled:opacity-60"
+                      className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-60"
                     >
                       Enregistrer
                     </button>
                     <button
                       type="button"
                       onClick={cancelEditTask}
-                      className="rounded-lg border border-sand-300 px-3 py-1.5 text-sm text-graphite-700 hover:bg-sand-100"
+                      className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-zinc-700 hover:bg-gray-50"
                     >
                       Annuler
                     </button>
@@ -984,8 +975,8 @@ function TaskListSection({
               ) : (
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-graphite-800">{t.title}</p>
-                    <p className="text-xs text-graphite-500 mt-0.5">
+                    <p className="font-medium text-zinc-800">{t.title}</p>
+                    <p className="text-xs text-zinc-500 mt-0.5">
                       {TASK_STATUS_LABELS[t.status] ?? t.status}
                       {t.due_date && ` · ${t.due_date}`}
                     </p>
@@ -994,7 +985,7 @@ function TaskListSection({
                     <select
                       value={t.status}
                       onChange={(e) => onUpdateStatus(t.id, e.target.value)}
-                      className="text-xs rounded border border-sand-300 px-2 py-1 text-graphite-700"
+                      className="text-xs rounded border border-gray-200 px-2 py-1 text-zinc-700"
                     >
                       <option value="todo">{TASK_STATUS_LABELS.todo}</option>
                       <option value="in_progress">{TASK_STATUS_LABELS.in_progress}</option>
@@ -1004,7 +995,7 @@ function TaskListSection({
                     <button
                       type="button"
                       onClick={() => startEditTask(t)}
-                      className="text-xs text-sage-600 hover:text-sage-700"
+                      className="text-xs text-blue-600 hover:text-blue-700"
                     >
                       Modifier
                     </button>

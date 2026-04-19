@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios.js";
 import { logout } from "../api/auth.js";
 import Card from "../components/Card.jsx";
+import Badge from "../components/ui/Badge.jsx";
 
 const STATUS_LABELS = {
   pending: "En attente",
@@ -55,9 +56,7 @@ export default function SupervisionRequestsPage() {
   async function handleAccept(requestId) {
     setRespondingId(requestId);
     try {
-      await api.patch(`/api/supervision-requests/${requestId}/`, {
-        status: "accepted",
-      });
+      await api.patch(`/api/supervision-requests/${requestId}/`, { status: "accepted" });
       await fetchRequests();
     } catch (err) {
       const msg =
@@ -96,132 +95,122 @@ export default function SupervisionRequestsPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-sand-300/60 bg-white/80 backdrop-blur">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link
-            to="/dashboard"
-            className="text-sm text-graphite-600 hover:text-graphite-800"
-          >
-            ← Retour au dashboard
-          </Link>
-          <h1 className="text-xl font-semibold text-graphite-800">
-            Demandes de supervision
-          </h1>
+    <div className="max-w-4xl mx-auto px-6 py-8">
+      <h2 className="text-2xl font-bold text-zinc-900">Demandes de supervision</h2>
+      <p className="mt-1 text-sm text-zinc-500">
+        Demandes envoyées par les étudiants. Acceptez pour suivre le projet.
+      </p>
+
+      {error && (
+        <div className="mt-6 rounded-2xl bg-rose-50/80 px-6 py-4 text-rose-700 ring-1 ring-rose-200">
+          {error}
         </div>
-      </header>
+      )}
 
-      <main className="max-w-4xl mx-auto px-4 py-10">
-        <p className="text-graphite-600 text-sm mt-1">
-          Demandes envoyées par les étudiants. Acceptez pour suivre le projet.
-        </p>
-
-        {error && (
-          <div className="mt-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
-        {loading ? (
-          <div className="mt-8 text-graphite-600 text-sm">Chargement...</div>
-        ) : (
-          <div className="mt-6 space-y-8">
-            {receivedPending.length > 0 && (
-              <div>
-                <h2 className="text-lg font-medium text-graphite-800 mb-3">
-                  En attente ({receivedPending.length})
-                </h2>
-                <div className="space-y-3">
-                  {receivedPending.map((r) => (
-                    <Card key={r.id} className="p-4">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <p className="font-medium text-graphite-800">
-                            {r.project_title}
+      {loading ? (
+        <div className="mt-8 text-zinc-500 text-sm">Chargement...</div>
+      ) : (
+        <div className="mt-8 space-y-8">
+          {receivedPending.length > 0 && (
+            <div>
+              <h3 className="text-base font-semibold text-zinc-800 mb-3">
+                En attente ({receivedPending.length})
+              </h3>
+              <div className="space-y-3">
+                {receivedPending.map((r) => (
+                  <Card key={r.id} className="p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-zinc-900">{r.project_title}</p>
+                        <p className="text-sm text-zinc-500 mt-0.5">
+                          Étudiant : {r.owner_email}
+                        </p>
+                        {r.message && (
+                          <p className="text-sm text-zinc-600 mt-2 italic">
+                            « {r.message} »
                           </p>
-                          <p className="text-sm text-graphite-600 mt-0.5">
-                            Étudiant : {r.owner_email}
-                          </p>
-                          {r.message && (
-                            <p className="text-sm text-graphite-600 mt-2 italic">
-                              « {r.message} »
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex gap-2 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => handleAccept(r.id)}
-                            disabled={respondingId !== null}
-                            className="rounded-lg bg-sage-500 px-3 py-1.5 text-sm text-white hover:bg-sage-600 disabled:opacity-60"
-                          >
-                            {respondingId === r.id ? "..." : "Accepter"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setShowDeclineModal(r.id)}
-                            disabled={respondingId !== null}
-                            className="rounded-lg border border-sand-300 px-3 py-1.5 text-sm text-graphite-600 hover:bg-sand-100 disabled:opacity-60"
-                          >
-                            Refuser
-                          </button>
-                        </div>
+                        )}
                       </div>
-                    </Card>
-                  ))}
-                </div>
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleAccept(r.id)}
+                          disabled={respondingId !== null}
+                          className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60 transition-colors"
+                        >
+                          {respondingId === r.id ? "..." : "Accepter"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowDeclineModal(r.id)}
+                          disabled={respondingId !== null}
+                          className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-gray-50 disabled:opacity-60 transition-colors"
+                        >
+                          Refuser
+                        </button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {receivedOther.length > 0 && (
-              <div>
-                <h2 className="text-lg font-medium text-graphite-800 mb-3">
-                  Traitées
-                </h2>
-                <div className="space-y-3">
-                  {receivedOther.map((r) => (
-                    <Card key={r.id} className="p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <p className="font-medium text-graphite-800">
-                            {r.project_title}
-                          </p>
-                          <p className="text-sm text-graphite-600">
-                            {r.owner_email} · {STATUS_LABELS[r.status] ?? r.status}
-                          </p>
-                        </div>
+          {receivedOther.length > 0 && (
+            <div>
+              <h3 className="text-base font-semibold text-zinc-800 mb-3">Traitées</h3>
+              <div className="space-y-3">
+                {receivedOther.map((r) => (
+                  <Card key={r.id} className="p-5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <p className="font-semibold text-zinc-900">{r.project_title}</p>
+                        <p className="text-sm text-zinc-500 mt-0.5">{r.owner_email}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Badge
+                          variant={
+                            r.status === "accepted"
+                              ? "approved"
+                              : r.status === "declined"
+                              ? "rejected"
+                              : "pending"
+                          }
+                        >
+                          {STATUS_LABELS[r.status] ?? r.status}
+                        </Badge>
                         {r.status === "accepted" && (
                           <Link
                             to={`/projects/${r.project_id}`}
-                            className="text-sm text-sage-600 hover:text-sage-700"
+                            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                           >
                             Voir le projet →
                           </Link>
                         )}
                       </div>
-                    </Card>
-                  ))}
-                </div>
+                    </div>
+                  </Card>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {receivedPending.length === 0 && receivedOther.length === 0 && (
-              <Card className="p-8 text-center">
-                <p className="text-graphite-600">Aucune demande de supervision</p>
-                <p className="text-sm text-graphite-500 mt-1">
-                  Les demandes des étudiants apparaîtront ici.
-                </p>
-              </Card>
-            )}
-          </div>
-        )}
-      </main>
+          {receivedPending.length === 0 && receivedOther.length === 0 && (
+            <Card className="p-12 text-center">
+              <p className="text-zinc-600 font-medium">Aucune demande de supervision</p>
+              <p className="text-sm text-zinc-500 mt-1">
+                Les demandes des étudiants apparaîtront ici.
+              </p>
+            </Card>
+          )}
+        </div>
+      )}
 
       {showDeclineModal && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-10">
-          <Card className="max-w-md w-full p-5">
-            <h3 className="font-medium text-graphite-800">Refuser la demande</h3>
-            <p className="text-sm text-graphite-600 mt-1">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
+          <Card className="max-w-md w-full p-6">
+            <h3 className="font-semibold text-zinc-900">Refuser la demande</h3>
+            <p className="text-sm text-zinc-500 mt-1">
               Message optionnel à l&apos;étudiant :
             </p>
             <textarea
@@ -229,16 +218,14 @@ export default function SupervisionRequestsPage() {
               onChange={(e) => setDeclineMessage(e.target.value)}
               placeholder="Ex. : charge de travail trop élevée..."
               rows={3}
-              className="mt-2 w-full rounded-lg border border-sand-300 px-3 py-2 text-sm resize-none"
+              className="mt-3 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm resize-none focus:bg-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition"
             />
             <div className="mt-4 flex gap-2">
               <button
                 type="button"
-                onClick={() =>
-                  handleDecline(showDeclineModal, declineMessage)
-                }
+                onClick={() => handleDecline(showDeclineModal, declineMessage)}
                 disabled={respondingId !== null}
-                className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 hover:bg-red-100 disabled:opacity-60"
+                className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-60 transition-colors"
               >
                 {respondingId === showDeclineModal ? "..." : "Refuser"}
               </button>
@@ -248,7 +235,7 @@ export default function SupervisionRequestsPage() {
                   setShowDeclineModal(null);
                   setDeclineMessage("");
                 }}
-                className="rounded-lg border border-sand-300 px-3 py-2 text-sm text-graphite-600 hover:bg-sand-100"
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-gray-50 transition-colors"
               >
                 Annuler
               </button>

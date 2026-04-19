@@ -4,42 +4,44 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Couleur marque (alignée sur le logo Gradely) — modifier ici pour matcher le logo
+        // Couleur marque — Bleu académique professionnel
         brand: {
-          50: "#f0fdfa",
-          "50-muted": "rgba(240, 253, 250, 0.3)", /* pour dégradés (ex. to-brand-50-muted) */
-          100: "#ccfbf1",
-          200: "#99f6e4",
-          300: "#5eead4",
-          400: "#2dd4bf",
-          500: "#14b8a6",
-          600: "#0d9488",
-          700: "#0f766e",
-          800: "#115e59",
+          50: "#EFF6FF",
+          100: "#DBEAFE",
+          200: "#BFDBFE",
+          300: "#93C5FD",
+          400: "#60A5FA",
+          500: "#3B82F6",
+          600: "#2563EB",
+          700: "#1D4ED8",
+          800: "#1E40AF",
+          900: "#1E3A8A",
         },
-        // Palette académique : sable / graphite / vert sauge
+        // Rétrocompatibilité : sand → gris cool
         sand: {
-          50: "#FAF9F6",
-          100: "#F5F1E8",
-          200: "#EDE8DD",
-          300: "#E2DCCE",
+          50: "#F9FAFB",
+          100: "#F3F4F6",
+          200: "#E5E7EB",
+          300: "#D1D5DB",
         },
+        // Rétrocompatibilité : graphite → zinc
         graphite: {
-          600: "#5C5C5C",
-          700: "#3D3D3D",
-          800: "#2C2C2C",
-          900: "#1A1A1A",
+          600: "#6B7280",
+          700: "#374151",
+          800: "#1F2937",
+          900: "#111827",
         },
+        // Rétrocompatibilité : sage → bleu (boutons CTA)
         sage: {
-          400: "#9CAF88",
-          500: "#87A96B",
-          600: "#6B8E4E",
-          700: "#556B3D",
+          400: "#60A5FA",
+          500: "#3B82F6",
+          600: "#2563EB",
+          700: "#1D4ED8",
         },
       },
       boxShadow: {
-        card: "0 2px 12px rgba(44, 44, 44, 0.08)",
-        cardHover: "0 4px 20px rgba(44, 44, 44, 0.12)",
+        card: "0 1px 3px 0 rgba(0,0,0,0.08), 0 1px 2px -1px rgba(0,0,0,0.06)",
+        cardHover: "0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.06)",
       },
     },
   },

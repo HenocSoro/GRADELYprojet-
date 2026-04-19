@@ -7,8 +7,8 @@ export default function Card({ children, className = "", hoverable = false }) {
   return (
     <div
       className={
-        "rounded-2xl bg-white/80 backdrop-blur shadow-sm ring-1 ring-zinc-200/80 transition-all duration-200 " +
-        (hoverable ? "hover:shadow-md hover:ring-zinc-300/80 " : "") +
+        "rounded-2xl bg-white border border-gray-100 shadow transition-all duration-200 " +
+        (hoverable ? "hover:shadow-lg hover:border-gray-200 hover:-translate-y-0.5 " : "") +
         className
       }
     >
