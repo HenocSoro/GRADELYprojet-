@@ -26,10 +26,6 @@ export default function CreateProjectPage() {
         logout();
         navigate("/login", { replace: true });
       } else {
-<<<<<<< HEAD
-        // Affiche tous les détails d'erreur (validation, serveur, réseau)
-=======
->>>>>>> f75bcda (Amelioration visuelle du frontend : logo, dashboard, navigation, pages)
         const data = err.response?.data;
         let msg = "Impossible de créer le projet.";
         if (data) {
@@ -66,7 +62,7 @@ export default function CreateProjectPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-zinc-900 placeholder-zinc-400 focus:bg-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition text-sm"
-              placeholder="ex: Projet de synthèse 2025"
+              placeholder="ex: Projet de synthèse 2026"
               required
             />
           </div>

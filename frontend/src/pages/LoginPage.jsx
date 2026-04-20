@@ -109,7 +109,7 @@ export default function LoginPage() {
         </form>
       </div>
 
-      <p className="text-zinc-400 text-xs mt-6">© 2025 Gradely</p>
+      <p className="text-zinc-400 text-xs mt-6">© 2026 Gradely</p>
     </div>
   );
 }

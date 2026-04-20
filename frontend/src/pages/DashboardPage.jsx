@@ -103,7 +103,7 @@ export default function DashboardPage() {
 
   return (
     <div>
-      {/* Hero banner — remplacer le style par backgroundImage: "url(...)" quand tu as l'image */}
+      {/* Hero banner */}
       <div
         className="w-full relative overflow-hidden"
         style={{

@@ -23,7 +23,7 @@ L'idée de base : permettre aux étudiants de gérer leurs projets de synthèse 
 
 ## Stack
 
-- **Backend :** Django 4 + Django REST Framework
+- **Backend :** Django 6 + Django REST Framework
 - **Auth :** SimpleJWT
 - **Frontend :** React 18 + Vite + Tailwind CSS
 - **HTTP :** Axios (avec intercepteurs pour le refresh JWT)
@@ -122,10 +122,11 @@ gradely/
 
 | Méthode | Endpoint | Description |
 |---|---|---|
-| POST | `/api/accounts/login/` | Connexion |
+| POST | `/api/token/` | Connexion (JWT) |
 | POST | `/api/accounts/register/` | Inscription |
 | GET/POST | `/api/projects/` | Liste / créer un projet |
 | GET | `/api/projects/<id>/` | Détail d'un projet |
+| POST | `/api/token/refresh/` | Rafraîchir le token JWT |
 | GET/POST | `/api/projects/<id>/tasks/` | Tâches |
 | GET/POST | `/api/projects/<id>/comments/` | Commentaires |
 | GET | `/api/projects/<id>/activity/` | Fil d'activité |
